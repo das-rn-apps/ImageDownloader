@@ -16,7 +16,7 @@ export default function SearchBox({ value, onChange, disabled, onSubmit }: Props
   }
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-white/70 mb-2">Search query</label>
+      <label className="block text-sm font-medium text-white/70 mb-2">Give image name</label>
       <input
         type="text"
         value={value}

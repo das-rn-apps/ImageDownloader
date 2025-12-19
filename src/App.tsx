@@ -88,13 +88,13 @@ function App() {
   return (
     <div>
       <div className="min-h-screen relative overflow-hidden bg-slate-950 flex items-center justify-center px-4">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(14,165,233,0.25),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(99,102,241,0.25),_transparent_50%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.25),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(99,102,241,0.25),transparent_50%)]" />
         <div className="relative z-10 w-full max-w-2xl">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white/70">
               Personal AI Toolkit
             </div>
-            <h1 className="mt-3 text-3xl md:text-4xl font-semibold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+            <h1 className="mt-3 text-3xl md:text-4xl font-semibold bg-linear-to-r from-white to-white/70 bg-clip-text text-transparent">
               4K Image Downloader
             </h1>
             <p className="mt-2 text-white/70">
