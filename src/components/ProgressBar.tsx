@@ -10,7 +10,7 @@ export default function ProgressBar({ progress, text }: Props) {
       <div className="mb-2 text-sm text-white/80">{text}</div>
       <div className="h-3 w-full rounded-full bg-white/10">
         <div
-          className="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-sky-500 transition-all"
+          className="h-3 rounded-full bg-linear-to-r from-indigo-500 to-sky-500 transition-all"
           style={{ width: `${pct * 100}%` }}
         />
       </div>

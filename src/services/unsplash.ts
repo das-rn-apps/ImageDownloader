@@ -9,16 +9,26 @@ const BASE_URL = 'https://api.unsplash.com'
 
 const perPageMax = 30
 
+export type Orientation = 'landscape' | 'portrait' | 'squarish'
+
 const ensureKey = () => {
   const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string | undefined
   if (!key) throw new Error('Missing VITE_UNSPLASH_ACCESS_KEY')
   return key
 }
 
-const to4kLandscape = (raw: string) => {
+const to4k = (raw: string, orientation: Orientation) => {
   const url = new URL(raw)
-  url.searchParams.set('w', '3840')
-  url.searchParams.set('h', '2160')
+  if (orientation === 'landscape') {
+    url.searchParams.set('w', '3840')
+    url.searchParams.set('h', '2160')
+  } else if (orientation === 'portrait') {
+    url.searchParams.set('w', '2160')
+    url.searchParams.set('h', '3840')
+  } else {
+    url.searchParams.set('w', '3840')
+    url.searchParams.set('h', '3840')
+  }
   url.searchParams.set('fit', 'crop')
   url.searchParams.set('fm', 'jpg')
   url.searchParams.set('q', '85')
@@ -26,7 +36,7 @@ const to4kLandscape = (raw: string) => {
   return url.toString()
 }
 
-export const searchImageUrls = async (query: string, total: number) => {
+export const searchImageUrls = async (query: string, total: number, orientation: Orientation) => {
   const key = ensureKey()
   const perPage = Math.min(perPageMax, Math.max(1, total))
   const pages = Math.ceil(total / perPage)
@@ -35,7 +45,7 @@ export const searchImageUrls = async (query: string, total: number) => {
   for (let page = 1; page <= pages; page++) {
     const url =
       `${BASE_URL}/search/photos?query=${encodeURIComponent(query)}` +
-      `&orientation=landscape&per_page=${perPage}&page=${page}`
+      `&orientation=${orientation}&per_page=${perPage}&page=${page}`
     const res = await fetch(url, {
       headers: { Authorization: `Client-ID ${key}` }
     })
@@ -46,11 +56,10 @@ export const searchImageUrls = async (query: string, total: number) => {
     const results: UnsplashPhoto[] = data.results ?? []
     for (const p of results) {
       if (acc.length >= total) break
-      acc.push(to4kLandscape(p.urls.raw))
+      acc.push(to4k(p.urls.raw, orientation))
     }
     if (results.length === 0 || acc.length >= total) break
   }
 
   return acc
 }
-

@@ -4,12 +4,14 @@ import ImageCountSelect from './components/ImageCountSelect'
 import DownloadButton from './components/DownloadButton'
 import ProgressBar from './components/ProgressBar'
 import PreviewGrid from './components/PreviewGrid'
+import OrientationSelect from './components/OrientationSelect'
+import type { Orientation } from './services/unsplash'
 import { searchImageUrls } from './services/unsplash'
 import { downloadSequential } from './utils/downloadImage'
 
 function App() {
   const [query, setQuery] = useState('')
-  const [count, setCount] = useState(20)
+  const [count, setCount] = useState(5)
   const [downloading, setDownloading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressText, setProgressText] = useState('')
@@ -18,6 +20,7 @@ function App() {
   const [previews, setPreviews] = useState<string[]>([])
   const [statuses, setStatuses] = useState<Array<'pending' | 'success' | 'failed'>>([])
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
+  const [orientation, setOrientation] = useState<Orientation>('landscape')
 
   const canDownload = useMemo(() => query.trim().length > 0 && !downloading, [query, downloading])
 
@@ -47,11 +50,19 @@ function App() {
     setProgressText(`Downloading 0 / ${count}`)
     setSummary(null)
     try {
-      const urls = await searchImageUrls(query.trim(), count)
+      const urls = await searchImageUrls(query.trim(), count, orientation)
       const thumbs = urls.map((u) => {
         const url = new URL(u)
-        url.searchParams.set('w', '400')
-        url.searchParams.set('h', '225')
+        if (orientation === 'landscape') {
+          url.searchParams.set('w', '400')
+          url.searchParams.set('h', '225')
+        } else if (orientation === 'portrait') {
+          url.searchParams.set('w', '225')
+          url.searchParams.set('h', '400')
+        } else {
+          url.searchParams.set('w', '300')
+          url.searchParams.set('h', '300')
+        }
         url.searchParams.set('q', '75')
         return url.toString()
       })
@@ -83,7 +94,7 @@ function App() {
       setDownloading(false)
       setCurrentIndex(null)
     }
-  }, [query, count])
+  }, [query, count, orientation])
 
   return (
     <div>
@@ -103,10 +114,11 @@ function App() {
           </div>
           <div className="rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-soft p-6 space-y-5">
             <SearchBox value={query} onChange={setQuery} disabled={downloading} onSubmit={startDownload} />
+            <OrientationSelect value={orientation} onChange={setOrientation} disabled={downloading} />
             <ImageCountSelect value={count} onChange={setCount} disabled={downloading} />
             <div className="flex items-center justify-between">
               <DownloadButton onClick={startDownload} disabled={!canDownload} />
-              <div className="text-sm text-white/60">Unsplash landscape 4K via urls.raw</div>
+              <div className="text-sm text-white/60">Unsplash {orientation} 4K via urls.raw</div>
             </div>
             {downloading && <ProgressBar progress={progress} text={progressText} />}
             {previews.length > 0 && (
