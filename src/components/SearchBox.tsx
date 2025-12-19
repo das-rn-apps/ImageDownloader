@@ -16,7 +16,7 @@ export default function SearchBox({ value, onChange, disabled, onSubmit }: Props
   }
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Search query</label>
+      <label className="block text-sm font-medium text-white/70 mb-2">Search query</label>
       <input
         type="text"
         value={value}
@@ -24,7 +24,7 @@ export default function SearchBox({ value, onChange, disabled, onSubmit }: Props
         onKeyDown={handleKey}
         disabled={disabled}
         placeholder="e.g. nature, car, dog"
-        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 shadow-soft focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-gray-100 disabled:text-gray-400"
+        className="w-full rounded-xl border border-white/20 bg-white/10 backdrop-blur px-4 py-3 text-white placeholder:text-white/60 shadow-soft focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-white/5 disabled:text-white/40"
       />
     </div>
   )

@@ -17,19 +17,24 @@ export const downloadImage = async (url: string, filename: string) => {
 export const downloadSequential = async (
   urls: string[],
   query: string,
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
+  onItemStart?: (index: number) => void,
+  onItemResult?: (index: number, ok: boolean) => void
 ) => {
   let success = 0;
   let failed = 0;
   const failedIndices: number[] = [];
   for (let i = 0; i < urls.length; i++) {
+    onItemStart?.(i);
     try {
       const filename = `${query}_${i + 1}.jpg`;
       await downloadImage(urls[i], filename);
       success++;
+      onItemResult?.(i, true);
     } catch {
       failed++;
       failedIndices.push(i);
+      onItemResult?.(i, false);
     }
     onProgress?.(i + 1, urls.length);
     await sleep(50);

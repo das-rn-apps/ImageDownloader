@@ -3,6 +3,7 @@ import SearchBox from './components/SearchBox'
 import ImageCountSelect from './components/ImageCountSelect'
 import DownloadButton from './components/DownloadButton'
 import ProgressBar from './components/ProgressBar'
+import PreviewGrid from './components/PreviewGrid'
 import { searchImageUrls } from './services/unsplash'
 import { downloadSequential } from './utils/downloadImage'
 
@@ -14,7 +15,9 @@ function App() {
   const [progressText, setProgressText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<{ requested: number; success: number; failed: number } | null>(null)
-  const [dark, setDark] = useState(false)
+  const [previews, setPreviews] = useState<string[]>([])
+  const [statuses, setStatuses] = useState<Array<'pending' | 'success' | 'failed'>>([])
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null)
 
   const canDownload = useMemo(() => query.trim().length > 0 && !downloading, [query, downloading])
 
@@ -45,43 +48,73 @@ function App() {
     setSummary(null)
     try {
       const urls = await searchImageUrls(query.trim(), count)
-      const result = await downloadSequential(urls, query.trim(), (completed, total) => {
-        setProgress(completed / total)
-        setProgressText(`Downloading ${completed} / ${total}`)
+      const thumbs = urls.map((u) => {
+        const url = new URL(u)
+        url.searchParams.set('w', '400')
+        url.searchParams.set('h', '225')
+        url.searchParams.set('q', '75')
+        return url.toString()
       })
+      setPreviews(thumbs)
+      setStatuses(Array(thumbs.length).fill('pending'))
+      const result = await downloadSequential(
+        urls,
+        query.trim(),
+        (completed, total) => {
+          setProgress(completed / total)
+          setProgressText(`Downloading ${completed} / ${total}`)
+        },
+        (index) => {
+          setCurrentIndex(index)
+        },
+        (index, ok) => {
+          setStatuses((prev) => {
+            const next = prev.slice()
+            next[index] = ok ? 'success' : 'failed'
+            return next
+          })
+        }
+      )
       setSummary({ requested: count, success: result.success, failed: result.failed })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error'
       setError(msg)
     } finally {
       setDownloading(false)
+      setCurrentIndex(null)
     }
   }, [query, count])
 
   return (
-    <div className={dark ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
-        <div className="w-full max-w-xl">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">4K Image Downloader</h1>
-            <button
-              onClick={() => setDark((v) => !v)}
-              className="rounded-lg border border-gray-300 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-3 py-2 shadow-soft"
-            >
-              {dark ? 'Light' : 'Dark'}
-            </button>
+    <div>
+      <div className="min-h-screen relative overflow-hidden bg-slate-950 flex items-center justify-center px-4">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(14,165,233,0.25),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(99,102,241,0.25),_transparent_50%)]" />
+        <div className="relative z-10 w-full max-w-2xl">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white/70">
+              Personal AI Toolkit
+            </div>
+            <h1 className="mt-3 text-3xl md:text-4xl font-semibold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+              4K Image Downloader
+            </h1>
+            <p className="mt-2 text-white/70">
+              Search Unsplash and auto-download high-quality landscape images.
+            </p>
           </div>
-          <div className="rounded-2xl bg-white dark:bg-gray-800 shadow-soft p-6 space-y-5">
+          <div className="rounded-2xl border border-white/15 bg-white/10 backdrop-blur shadow-soft p-6 space-y-5">
             <SearchBox value={query} onChange={setQuery} disabled={downloading} onSubmit={startDownload} />
             <ImageCountSelect value={count} onChange={setCount} disabled={downloading} />
             <div className="flex items-center justify-between">
               <DownloadButton onClick={startDownload} disabled={!canDownload} />
-              <div className="text-sm text-gray-500">Unsplash landscape 4K via urls.raw</div>
+              <div className="text-sm text-white/60">Unsplash landscape 4K via urls.raw</div>
             </div>
             {downloading && <ProgressBar progress={progress} text={progressText} />}
-            {error && <div className="text-sm text-red-600">{error}</div>}
+            {previews.length > 0 && (
+              <PreviewGrid urls={previews} statuses={statuses} currentIndex={currentIndex} />
+            )}
+            {error && <div className="text-sm text-red-400">{error}</div>}
             {summary && (
-              <div className="rounded-xl bg-gray-50 dark:bg-gray-900 p-4 text-sm text-gray-800 dark:text-gray-200">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
                 <div className="font-medium mb-1">Summary</div>
                 <div className="flex gap-4">
                   <div>Requested: {summary.requested}</div>
@@ -91,7 +124,7 @@ function App() {
               </div>
             )}
           </div>
-          <p className="text-center text-xs text-gray-500 mt-4">
+          <p className="text-center text-xs text-white/40 mt-4">
             Personal use only. Browser may prompt to allow multiple downloads.
           </p>
         </div>
